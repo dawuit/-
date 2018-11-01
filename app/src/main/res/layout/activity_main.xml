@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#111111"
+    tools:context=".MainActivity"
+    android:fitsSystemWindows="true"
+    android:clipToPadding="true" >
+
+    <Button
+        android:id="@+id/trackbtn"
+        android:background="@drawable/btn_oval"
+        android:layout_width="50dip"
+        android:layout_height="50dip"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="15dp"
+        android:layout_marginRight="15dp"
+        android:textColor="#ffffff"
+        android:textSize="25dp"
+        android:text="@string/icons"
+    />
+
+    <TextView
+        android:id="@+id/status"
+        android:text="定位中"
+        android:layout_height="20dp"
+        android:layout_width="match_parent"
+        android:textColor="#fff"
+        android:textSize="12dp"
+        android:textAlignment="center"
+        />
+
+    <ProgressBar
+        android:id="@+id/gpsProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:progressDrawable="@drawable/progressbar"
+        android:layout_width="5dp"
+        android:layout_height="320dp"
+        android:layout_marginTop="25dp"
+        android:max="30"
+        android:progress="0"
+        />
+
+    <chn.wu.jianhui.speed_detection.view.SpeedView
+        android:layout_width="320dp"
+        android:layout_height="320dp"
+        android:layout_marginTop="25dp"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/speed_view"
+
+        />
+
+    <LinearLayout
+        android:id="@+id/info1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/speed_view"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="1dp">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#202020"
+            android:padding="5dp">
+            <TextView
+                android:text="持续时间"
+                android:layout_height="20dp"
+                android:layout_width="match_parent"
+                android:textSize="15dp"
+                android:textColor="#fff"
+                />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                >
+                <ImageView
+                android:layout_height="30dp"
+                android:layout_width="30dp"
+                android:src="@drawable/time"
+                />
+                <TextView
+                    android:id="@+id/time"
+                    android:text="00:00:00"
+                    android:layout_height="30dp"
+                    android:layout_width="match_parent"
+                    android:textColor="#fff"
+                    android:textSize="25dp"
+                    android:textAlignment="textEnd"
+                    />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginLeft="5dp"
+            android:background="#202020"
+            android:padding="5dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:text="行驶距离"
+                android:textColor="#fff"
+                android:textSize="15dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                >
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/distance" />
+
+                <TextView
+                    android:id="@+id/distance"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:text="0 KM"
+                    android:textAlignment="textEnd"
+                    android:textColor="#fff"
+                    android:textSize="25dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id = "@+id/listview"
+        android:layout_below="@+id/info1"
+        >
+    </ListView>
+
+
+</RelativeLayout>
