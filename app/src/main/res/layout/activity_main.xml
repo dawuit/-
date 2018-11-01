@@ -3,16 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#111111"
+    android:background="#0e0e0e"
     tools:context=".MainActivity"
     android:fitsSystemWindows="true"
     android:clipToPadding="true" >
 
     <Button
-        android:id="@+id/trackbtn"
+        android:id="@+id/addbtn"
         android:background="@drawable/btn_oval"
-        android:layout_width="50dip"
-        android:layout_height="50dip"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_marginTop="15dp"
@@ -21,6 +21,32 @@
         android:textSize="25dp"
         android:text="@string/icons"
     />
+
+    <Button
+        android:id="@+id/mapbtn"
+        android:background="@drawable/btn_oval"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="80dp"
+        android:layout_marginRight="15dp"
+        android:textColor="#ffffff"
+        android:text="轨迹"
+        />
+
+    <Button
+        android:id="@+id/historybtn"
+        android:background="@drawable/btn_oval"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="145dp"
+        android:layout_marginRight="15dp"
+        android:textColor="#ffffff"
+        android:text="历史"
+        />
 
     <TextView
         android:id="@+id/status"
@@ -64,7 +90,7 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#202020"
+            android:background="#181818"
             android:padding="5dp">
             <TextView
                 android:text="持续时间"
@@ -101,7 +127,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginLeft="5dp"
-            android:background="#202020"
+            android:background="#181818"
             android:padding="5dp">
 
             <TextView

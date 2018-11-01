@@ -29,48 +29,42 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.alibaba.fastjson.JSON;
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
-import com.amap.api.track.AMapTrackClient;
-import com.amap.api.track.ErrorCode;
-import com.amap.api.track.OnTrackLifecycleListener;
-import com.amap.api.track.TrackParam;
-import com.amap.api.track.query.entity.LocationMode;
-import com.amap.api.track.query.model.AddTerminalRequest;
-import com.amap.api.track.query.model.AddTerminalResponse;
-import com.amap.api.track.query.model.AddTrackRequest;
-import com.amap.api.track.query.model.AddTrackResponse;
-import com.amap.api.track.query.model.DistanceRequest;
-import com.amap.api.track.query.model.DistanceResponse;
-import com.amap.api.track.query.model.HistoryTrackResponse;
-import com.amap.api.track.query.model.LatestPointResponse;
-import com.amap.api.track.query.model.OnTrackListener;
-import com.amap.api.track.query.model.ParamErrorResponse;
-import com.amap.api.track.query.model.QueryTerminalRequest;
-import com.amap.api.track.query.model.QueryTerminalResponse;
-import com.amap.api.track.query.model.QueryTrackResponse;
+import com.amap.api.maps.model.LatLng;
+import com.amap.api.trace.LBSTraceClient;
+import com.amap.api.trace.TraceListener;
+import com.amap.api.trace.TraceLocation;
+import com.amap.api.trace.TraceOverlay;
+import com.amap.api.trace.TraceStatusListener;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import chn.wu.jianhui.speed_detection.utils.AmapServiceUtils;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import chn.wu.jianhui.speed_detection.view.SpeedView;
-
-
 /*
 * @author W.J.H
 * @email jianhui.wu.chn@hotmail.com
 * @create at 2018/10/27
 */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Button.OnClickListener
+{
+
 
     private static final String CHANNEL_ID_SERVICE_RUNNING = "CHANNEL_ID_SERVICE_RUNNING";
     private int[] item_icon = new int[]{R.drawable.start, R.drawable.highspeed, R.drawable.avgspeed, R.drawable.high, R.drawable.accuracy, R.drawable.site, R.drawable.direction};
     private String[] item_name = new String[]{"开始时间", "最高速度", "平均速度", "海拔高度", "位置精度", "位置信息", "当前方向"};
     private String[] item_content = new String[]{"--:--:--", "0.00 KM/H", "0.00 KM/H", "0 M", "0 M", "00.0000° 00.0000°",  "0.00°"};
-
+    private List<LatLng> trackData = new ArrayList<>();
     private MyBaseAdapter mAdapter = new MyBaseAdapter();
     private ListView listView;
     private SpeedView speedView;
@@ -78,14 +72,16 @@ public class MainActivity extends AppCompatActivity {
     private TextView status_t;
     private TextView time_t;
     private TextView distance_t;
-    private Button track_btn;
+    private Button add_btn;
+    private Button history_btn;
+    private Button map_btn;
     private double distance;
     private double max_speed;
     private Date start_time = new Date();
     private double avg_speed;
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
     private DecimalFormat decimalFormat = new DecimalFormat("##0.00");
-    private DecimalFormat decimalFormat_direction = new DecimalFormat("##0.0000");
+    private DecimalFormat decimalFormat_direction = new DecimalFormat("##0.00000");
     /*************************定位服务********************************/
     //定位服务类。此类提供单次定位、持续定位、地理围栏、最后位置相关功能
     //声明mlocationClient对象
@@ -110,20 +106,18 @@ public class MainActivity extends AppCompatActivity {
                     item_content[3] = aMapLocation.getAltitude() + " M";
                     item_content[4] = aMapLocation.getAccuracy() + " M";
                     item_content[5] = decimalFormat_direction.format(aMapLocation.getLatitude()) + "°  " + decimalFormat_direction.format(aMapLocation.getLongitude()) + "°";
-                    item_content[6] = simpleDateFormat.format(aMapLocation.getBearing()) + " M";
+                    item_content[6] = decimalFormat.format(aMapLocation.getBearing()) + "°";
                     listView.setAdapter(mAdapter);
                     time_t.setText(simpleDateFormat.format(new Date(System.currentTimeMillis() - start_time.getTime() - 8*60*60*1000)));
                     distance_t.setText(decimalFormat.format(distance) + " KM");
                     progressBar.setProgress(aMapLocation.getSatellites());
                     status_t.setText("运行中");
                     speedView.setStatues(speed, aMapLocation.getBearing());
-                    aMapTrackClient.queryDistance(new DistanceRequest(serviceId, terminalId, start_time.getTime(), System.currentTimeMillis(), trackId), onTrackListener);
+
                 }
                 else
                 {
-                    status_t.setText("定位信号差");
-                    progressBar.setProgress(0);
-                    speedView.setStatues(0, 0);
+                    SignalBadView();
 
                     Toast.makeText(MainActivity.this,"AmapError"
                             + "location Error, ErrCode:" + aMapLocation.getErrorCode() + ", errInfo:" + aMapLocation.getErrorInfo(), Toast.LENGTH_LONG).show();
@@ -137,149 +131,28 @@ public class MainActivity extends AppCompatActivity {
     };
 
     /*************************轨迹服务********************************/
-    //初始化猎鹰sdk服务类
-    private AMapTrackClient aMapTrackClient;
-    // 创建的服务id
-    private long serviceId;
-    // 唯一标识某个用户或某台设备的名称
-    private String terminalName;
-    private long terminalId;
     //服务key
     private String key;
-    //trackId
-    private long trackId;
-    //猎鹰服务请求根据
-    private AmapServiceUtils amapServiceUtils;
-
-    //猎鹰sdk服务启停状态的监听器
-    private final OnTrackLifecycleListener onTrackLifecycleListener = new OnTrackLifecycleListener() {
+    private LBSTraceClient lbsTraceClient;
+    private TraceStatusListener traceStatusListener = new TraceStatusListener() {
         @Override
-        public void onBindServiceCallback(int i, String s) {
-
-        }
-
-        @Override
-        public void onStartGatherCallback(int status, String msg) {
-            if (status == ErrorCode.TrackListen.START_GATHER_SUCEE || status == ErrorCode.TrackListen.START_GATHER_ALREADY_STARTED) {
-                Log.v("gdsdk",status + " " + msg);
-            } else {
-                Log.v("gdsdk",status + " " + msg);
-                status_t.setText("定位信号差");
-                Toast.makeText(MainActivity.this, "网络差，定位采集启动失败", Toast.LENGTH_SHORT);
-            }
-        }
-
-        @Override
-        public void onStartTrackCallback(int status, String msg) {
-            if (status == ErrorCode.TrackListen.START_TRACK_SUCEE ||
-                    status == ErrorCode.TrackListen.START_TRACK_SUCEE_NO_NETWORK ||
-                    status == ErrorCode.TrackListen.START_TRACK_ALREADY_STARTED) {
-                // 服务启动成功，继续开启收集上报
-                Log.v("gdsdk",status + " " + msg);
-                aMapTrackClient.startGather(this);
-            } else {
-                Log.v("gdsdk",status + " " + msg);
-                status_t.setText("定位信号差");
-                Toast.makeText(MainActivity.this, "网络差，轨迹上报服务服务启动失败", Toast.LENGTH_SHORT);
-            }
-        }
-
-        @Override
-        public void onStopGatherCallback(int i, String s) {
-
-        }
-
-        @Override
-        public void onStopTrackCallback(int i, String s) {
-
-        }
-    };
-
-    private OnTrackListener onTrackListener = new OnTrackListener() {
-        @Override
-        public void onQueryTerminalCallback(QueryTerminalResponse queryTerminalResponse) {
-            if (queryTerminalResponse.isSuccess()) {
-                if (queryTerminalResponse.getTid() <= 0) {
-                    // terminal还不存在，先创建
-                    aMapTrackClient.addTerminal(new AddTerminalRequest(terminalName, serviceId), onTrackListener);
+        public void onTraceStatus(List<TraceLocation> list, List<LatLng> list1, String s) {
+            if(s.equals(LBSTraceClient.TRACE_SUCCESS))
+            {
+                trackData = list1;
+                Toast.makeText(MainActivity.this,list1.toString() + " " + list1.size(), Toast.LENGTH_SHORT);
+                Log.v("gps", s + " " + list1.size());
+                StringBuffer sb = new StringBuffer();
+                for (LatLng i : list1)
+                {
+                    sb.append(i.toString() + " ");
                 }
-                else {
-                    // terminal已经存在，直接开启猎鹰服务
-                    terminalId = queryTerminalResponse.getTid();
-                    aMapTrackClient.addTrack(new AddTrackRequest(serviceId, terminalId), onTrackListener);
-                }
+                Log.v("gps", s + " " + sb.toString());
             }
             else
             {
-                // 请求失败
-                Toast.makeText(MainActivity.this, "请求失败，" + queryTerminalResponse.getErrorMsg(), Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @Override
-        public void onCreateTerminalCallback(AddTerminalResponse addTerminalResponse) {
-            if (addTerminalResponse.isSuccess()) {
-                // 创建完成，开启猎鹰服务
-                terminalId = addTerminalResponse.getTid();
-                aMapTrackClient.addTrack(new AddTrackRequest(serviceId, terminalId), onTrackListener);
-            } else {
-                // 请求失败
-                Toast.makeText(MainActivity.this, "请求失败，" + addTerminalResponse.getErrorMsg(), Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @Override
-        public void onDistanceCallback(DistanceResponse distanceResponse) {
-            distance = distanceResponse.getDistance() / 1000; //m 2 km
-        }
-
-        @Override
-        public void onLatestPointCallback(LatestPointResponse latestPointResponse) {
-
-        }
-
-        @Override
-        public void onHistoryTrackCallback(HistoryTrackResponse historyTrackResponse) {
-
-        }
-
-        @Override
-        public void onQueryTrackCallback(QueryTrackResponse queryTrackResponse) {
-
-        }
-
-        @Override
-        public void onAddTrackCallback(AddTrackResponse addTrackResponse) {
-            if (addTrackResponse.isSuccess()) {
-                trackId = addTrackResponse.getTrid();
-                TrackParam param = new TrackParam(serviceId, terminalId);
-                param.setTrackId(trackId);
-                aMapTrackClient.startTrack(param, onTrackLifecycleListener);
-            }
-            else {
-                Toast.makeText(MainActivity.this, "网络请求失败，" + addTrackResponse.getErrorMsg(), Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @Override
-        public void onParamErrorCallback(ParamErrorResponse paramErrorResponse) {
-
-        }
-    };
-
-    //消息监听
-    private Handler handler = new Handler()
-    {
-        @Override
-        public void handleMessage(Message msg) {
-            if (msg.what == AmapServiceUtils.SUCCESS)
-            {
-                serviceId = msg.getData().getInt("serviceId");
-                startTrackClient();
-            }
-            else if(msg.what == AmapServiceUtils.ERROR)
-            {
-                Toast.makeText(MainActivity.this, "请求服务失败", Toast.LENGTH_SHORT).show();
+                SignalBadView();
+                Log.v("gps", s);
             }
         }
     };
@@ -290,18 +163,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //透明状态栏
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        //透明导航栏
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-        listView = findViewById(R.id.listview);
-        status_t = findViewById(R.id.status);
-        speedView = findViewById(R.id.speed_view);
-        progressBar = findViewById(R.id.gpsProgressBar);
-        distance_t = findViewById(R.id.distance);
-        time_t = findViewById(R.id.time);
-        track_btn = findViewById(R.id.trackbtn);
-        track_btn.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/iconfont.ttf"));
+        initView();
+
         /********************************定位服务**************************************/
         mlocationClient = new AMapLocationClient(getApplicationContext());
         mlocationClient.enableBackgroundLocation(2, createNotification());
@@ -317,8 +180,10 @@ public class MainActivity extends AppCompatActivity {
         mlocationClient.setLocationOption(mLocationOption);
         mlocationClient.startLocation();
 
-        /*******************************轨迹服务***************************************/
-        terminalName = ((TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+        lbsTraceClient = LBSTraceClient.getInstance(getApplicationContext());
+        lbsTraceClient.startTrace(traceStatusListener);
+
+
         //获取猎鹰接口的key
         try
         {
@@ -326,24 +191,12 @@ public class MainActivity extends AppCompatActivity {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-        amapServiceUtils = new AmapServiceUtils(handler);
-        //配置猎鹰sdk
-        aMapTrackClient = new AMapTrackClient(getApplicationContext());
-        //设置定位周期，和轨迹上报周期
-        aMapTrackClient.setInterval(1, 30);
-        //仅适用gps
-        aMapTrackClient.setLocationMode(LocationMode.DEVICE_SENSORS);
-        //开启服务
-        amapServiceUtils.searchService(key);
+
 
         listView.setAdapter(mAdapter);
     }
 
-    //启动上报
-    public void startTrackClient()
-    {
-        aMapTrackClient.queryTerminal(new QueryTerminalRequest(serviceId, terminalName), onTrackListener);
-    }
+
 
     @Override
     protected void onStart() {
@@ -355,12 +208,42 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        aMapTrackClient.stopGather(onTrackLifecycleListener);
-        TrackParam params = new TrackParam(serviceId, terminalId);
-        params.setTrackId(trackId);
-        aMapTrackClient.stopTrack(params, onTrackLifecycleListener);
+        lbsTraceClient.stopTrace();
+        lbsTraceClient.destroy();
         mlocationClient.stopLocation();
         mlocationClient.onDestroy();
+    }
+
+    //设置信号差的视图
+    private void SignalBadView()
+    {
+        status_t.setText("定位信号差");
+        progressBar.setProgress(0);
+        speedView.setStatues(0, 0);
+    }
+
+    //初始化界面
+    private void initView()
+    {
+        //透明状态栏
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        //透明导航栏
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+        listView = findViewById(R.id.listview);
+        status_t = findViewById(R.id.status);
+        speedView = findViewById(R.id.speed_view);
+        progressBar = findViewById(R.id.gpsProgressBar);
+        distance_t = findViewById(R.id.distance);
+        time_t = findViewById(R.id.time);
+        add_btn = findViewById(R.id.addbtn);
+        add_btn.setOnClickListener(this);
+        add_btn.setTypeface(Typeface.createFromAsset(getAssets(),"fonts/iconfont.ttf"));
+        map_btn = findViewById(R.id.mapbtn);
+        map_btn.setVisibility(View.GONE);
+        map_btn.setOnClickListener(this);
+        history_btn = findViewById(R.id.historybtn);
+        history_btn.setVisibility(View.GONE);
+        history_btn.setOnClickListener(this);
     }
 
     /**
@@ -399,6 +282,25 @@ public class MainActivity extends AppCompatActivity {
             }).setNegativeButton("取消", null).create().show();
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public void onClick(View v)
+    {
+        switch (v.getId())
+        {
+            case R.id.addbtn:
+                map_btn.setVisibility(map_btn.getVisibility() == View.GONE? View.VISIBLE : View.GONE);
+                history_btn.setVisibility(history_btn.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+                break;
+            case R.id.mapbtn:
+                Intent intent = new Intent(this, MapActivity.class);
+                intent.putExtra("trackData", JSON.toJSONString(trackData));
+                startActivity(intent);
+                break;
+            case R.id.historybtn:
+                break;
+        }
     }
 
 
