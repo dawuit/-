@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
@@ -26,6 +27,7 @@ public class MapActivity extends AppCompatActivity implements Button.OnClickList
     private List<LatLng> trackData = new ArrayList<>();
     private TraceOverlay traceOverlay;
     private Button back_btn;
+    private TextView distance_t;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -50,9 +52,10 @@ public class MapActivity extends AppCompatActivity implements Button.OnClickList
             trackData.add(new LatLng(jsonObject.getDouble("latitude"), jsonObject.getDouble("longitude")));
         }
         traceOverlay = new TraceOverlay(mMapView.getMap(), trackData);
-        Toast.makeText(this, trackData.get(0).latitude +"", Toast.LENGTH_LONG);
         traceOverlay.setTraceStatus(TraceOverlay.TRACE_STATUS_FINISH);
         traceOverlay.zoopToSpan();
+        distance_t = findViewById(R.id.mapdistance);
+        distance_t.setText("轨迹纠编：" + traceOverlay.getDistance() + " KM");
     }
 
     @Override
