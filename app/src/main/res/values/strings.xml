@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">speed_detection</string>
-    <string name="icons">&#xe65b;</string>
+    <string name="icon_switch">&#xe6df;</string>
+    <string name="icon_back">&#xe611;</string>
 </resources>

@@ -8,46 +8,6 @@
     android:fitsSystemWindows="true"
     android:clipToPadding="true" >
 
-    <Button
-        android:id="@+id/addbtn"
-        android:background="@drawable/btn_oval"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="15dp"
-        android:layout_marginRight="15dp"
-        android:textColor="#ffffff"
-        android:textSize="25dp"
-        android:text="@string/icons"
-    />
-
-    <Button
-        android:id="@+id/mapbtn"
-        android:background="@drawable/btn_oval"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="80dp"
-        android:layout_marginRight="15dp"
-        android:textColor="#ffffff"
-        android:text="轨迹"
-        />
-
-    <Button
-        android:id="@+id/historybtn"
-        android:background="@drawable/btn_oval"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="145dp"
-        android:layout_marginRight="15dp"
-        android:textColor="#ffffff"
-        android:text="历史"
-        />
-
     <TextView
         android:id="@+id/status"
         android:text="定位中"
@@ -77,6 +37,59 @@
         android:id="@+id/speed_view"
 
         />
+
+    <Button
+        android:id="@+id/addbtn"
+        android:background="@drawable/btn_oval"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="15dp"
+        android:layout_marginRight="15dp"
+        android:textColor="#ffffff"
+        android:textSize="20dp"
+        android:text="@string/icon_switch"
+    />
+
+    <Button
+        android:id="@+id/mapbtn"
+        android:background="@drawable/btn_oval"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="80dp"
+        android:layout_marginRight="15dp"
+        android:textColor="#ffffff"
+        android:text="轨迹"
+        />
+
+    <Button
+        android:id="@+id/historybtn"
+        android:background="@drawable/btn_oval"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="145dp"
+        android:layout_marginRight="15dp"
+        android:textColor="#ffffff"
+        android:text="历史"
+        />
+
+    <Switch
+        android:id="@+id/saveswitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:thumb="@drawable/switch_custom_thumb_selector"
+        android:track="@drawable/switch_custom_track_selector"
+        android:layout_marginTop="210dp"
+        android:layout_marginRight="15dp"
+        android:visibility="gone"
+        android:checked="true"/>
 
     <LinearLayout
         android:id="@+id/info1"

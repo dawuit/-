@@ -10,7 +10,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
-        <activity android:name=".MapActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar" android:launchMode="singleTop"></activity>
+        <activity android:name=".MapActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
+        <activity android:name=".TrackListActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar"></activity>
 
         <activity android:name=".WelcomeActivity">
             <intent-filter>
@@ -20,7 +21,6 @@
         </activity>
 
         <meta-data android:name="com.amap.api.v2.apikey" android:value="cd4c02a81e3cf0fdaaa9f80bad19d073"/>
-        <meta-data android:name="com.amap.api.v2.webapikey" android:value="b61f6ad92b8242ccd6a8ebb746f34beb"/>
 
         <service android:name="com.amap.api.track.AMapTrackService"/>
         <service android:name="com.amap.api.location.APSService"/>

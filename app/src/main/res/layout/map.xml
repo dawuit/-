@@ -6,42 +6,60 @@
     android:layout_height="match_parent"
     android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
     android:background="#0e0e0e">
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:padding="5dp"
         android:layout_alignParentTop="true"
         >
-        <ImageView
-            android:id="@+id/track"
+        <Button
+            android:id="@+id/backbtn"
+            android:background="#0e0e0e"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:layout_marginTop="28dp"
-            android:layout_marginLeft="65dp"
-            android:src="@drawable/track"
+            android:layout_marginTop="30dp"
+            android:textSize="20dp"
+            android:textColor="#ffffff"
+            android:text="@string/icon_back"
             />
+
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/track"
+            android:layout_marginLeft="40dp"
+            android:layout_marginTop="20dp"/>
+
+        <TextView
+            android:id="@+id/map_start_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0000-00-00 00:00:00"
+            android:layout_marginTop="25dp"
+            android:textColor="#fff"
+            android:textSize="18dp"
+            android:layout_marginLeft="100dp"/>
+
+        <TextView
+            android:id="@+id/map_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:layout_marginLeft="100dp"
+            android:text="持续时间：00:00:00"
+            android:textColor="#fff"
+            android:textSize="12dp" />
         <TextView
             android:id="@+id/mapdistance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:text="0.00 KM"
+            android:layout_marginTop="50dp"
+            android:text="里程：0.00 KM"
+            android:layout_marginLeft="220dp"
             android:textColor="#fff"
-            android:textSize="18dp"
-            android:layout_marginLeft="15dp"/>
-    </LinearLayout>
-    <Button
-        android:id="@+id/backbtn"
-        android:background="@drawable/btn_oval"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginTop="23dp"
-        android:layout_marginLeft="5dp"
-        android:textColor="#ffffff"
-        android:text="返回"
-        />
+            android:textSize="12dp"/>
+    </RelativeLayout>
+
 
     <com.amap.api.maps.MapView
         android:id="@+id/map"

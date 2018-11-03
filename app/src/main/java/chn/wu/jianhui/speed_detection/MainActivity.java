@@ -6,27 +6,25 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,33 +37,29 @@ import com.amap.api.maps.model.LatLng;
 import com.amap.api.trace.LBSTraceClient;
 import com.amap.api.trace.TraceListener;
 import com.amap.api.trace.TraceLocation;
-import com.amap.api.trace.TraceOverlay;
-import com.amap.api.trace.TraceStatusListener;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import chn.wu.jianhui.speed_detection.utils.SqlUtils;
 import chn.wu.jianhui.speed_detection.view.SpeedView;
 /*
 * @author W.J.H
 * @email jianhui.wu.chn@hotmail.com
 * @create at 2018/10/27
 */
-public class MainActivity extends AppCompatActivity implements Button.OnClickListener
+public class MainActivity extends AppCompatActivity implements Button.OnClickListener, Switch.OnCheckedChangeListener, AbsListView.OnScrollListener
 {
 
 
     private static final String CHANNEL_ID_SERVICE_RUNNING = "CHANNEL_ID_SERVICE_RUNNING";
-    private int[] item_icon = new int[]{R.drawable.start, R.drawable.highspeed, R.drawable.avgspeed, R.drawable.high, R.drawable.accuracy, R.drawable.site, R.drawable.direction};
-    private String[] item_name = new String[]{"开始时间", "最高速度", "平均速度", "海拔高度", "位置精度", "位置信息", "当前方向"};
-    private String[] item_content = new String[]{"--:--:--", "0.00 KM/H", "0.00 KM/H", "0 M", "0 M", "00.0000° 00.0000°",  "0.00°"};
-    private List<LatLng> trackData = new ArrayList<>();
-    private MyBaseAdapter mAdapter = new MyBaseAdapter();
+
+
     private ListView listView;
     private SpeedView speedView;
     private ProgressBar progressBar;
@@ -75,19 +69,29 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
     private Button add_btn;
     private Button history_btn;
     private Button map_btn;
+    private Switch save_switch;
+
+    private MyBaseAdapter mAdapter = new MyBaseAdapter();
+    private int[] item_icon = new int[]{R.drawable.start, R.drawable.highspeed, R.drawable.avgspeed, R.drawable.high, R.drawable.accuracy, R.drawable.site, R.drawable.direction};
+    private String[] item_name = new String[]{"开始时间", "最高速度", "平均速度", "海拔高度", "位置精度", "位置信息", "当前方向"};
+    private String[] item_content = new String[]{"--:--:--", "0.00 KM/H", "0.00 KM/H", "0 M", "0 M", "00.0000° 00.0000°",  "0.00°"};
+    private List<LatLng> trackData = new ArrayList<>();
+    private List<TraceLocation> traceLocations = new ArrayList<>();
     private double distance;
     private double max_speed;
     private Date start_time = new Date();
     private double avg_speed;
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
     private DecimalFormat decimalFormat = new DecimalFormat("##0.00");
     private DecimalFormat decimalFormat_direction = new DecimalFormat("##0.00000");
+    private int scrolledY;
     /*************************定位服务********************************/
     //定位服务类。此类提供单次定位、持续定位、地理围栏、最后位置相关功能
     //声明mlocationClient对象
     private AMapLocationClient mlocationClient;
     //声明mLocationOption对象
     private AMapLocationClientOption mLocationOption = null;
+
     //位置变化监听器
     private AMapLocationListener aMapLocationListener = new AMapLocationListener() {
         @Override
@@ -97,28 +101,29 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
             {
                 if (aMapLocation.getErrorCode() == 0)
                 {
+                    traceLocations.add(new TraceLocation(aMapLocation.getLatitude(), aMapLocation.getLongitude(), aMapLocation.getSpeed(), aMapLocation.getBearing(), aMapLocation.getTime()));
                     double speed = aMapLocation.getSpeed() * 60 * 60 / 1000 ; // m/s 2 km/s
                     max_speed = max_speed < speed ? speed : max_speed;
                     avg_speed = distance / ((System.currentTimeMillis() - start_time.getTime())/1000.0/60/60);
                     item_content[0] = simpleDateFormat.format(start_time);
                     item_content[1] = decimalFormat.format(max_speed) + " KM/H";
-                    item_content[2] = decimalFormat.format(max_speed) + " KM/H";
+                    item_content[2] = decimalFormat.format(avg_speed) + " KM/H";
                     item_content[3] = aMapLocation.getAltitude() + " M";
                     item_content[4] = aMapLocation.getAccuracy() + " M";
                     item_content[5] = decimalFormat_direction.format(aMapLocation.getLatitude()) + "°  " + decimalFormat_direction.format(aMapLocation.getLongitude()) + "°";
                     item_content[6] = decimalFormat.format(aMapLocation.getBearing()) + "°";
-                    listView.setAdapter(mAdapter);
+                    mAdapter.notifyDataSetChanged();
+                    listView.invalidate();
+                    listView.scrollTo(0, scrolledY);
                     time_t.setText(simpleDateFormat.format(new Date(System.currentTimeMillis() - start_time.getTime() - 8*60*60*1000)));
                     distance_t.setText(decimalFormat.format(distance) + " KM");
                     progressBar.setProgress(aMapLocation.getSatellites());
-                    status_t.setText("运行中");
                     speedView.setStatues(speed, aMapLocation.getBearing());
-
+                    status_t.setText("运行中");
                 }
                 else
                 {
                     SignalBadView();
-
                     Toast.makeText(MainActivity.this,"AmapError"
                             + "location Error, ErrCode:" + aMapLocation.getErrorCode() + ", errInfo:" + aMapLocation.getErrorInfo(), Toast.LENGTH_LONG).show();
                     //显示错误信息ErrCode是错误码，errInfo是错误信息，详见错误码表。
@@ -132,28 +137,30 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
 
     /*************************轨迹服务********************************/
     //服务key
-    private String key;
     private LBSTraceClient lbsTraceClient;
-    private TraceStatusListener traceStatusListener = new TraceStatusListener() {
+    //轨迹纠编周期10秒
+    private Timer timer = new Timer();
+    private TimerTask timerTask = new TimerTask() {
         @Override
-        public void onTraceStatus(List<TraceLocation> list, List<LatLng> list1, String s) {
-            if(s.equals(LBSTraceClient.TRACE_SUCCESS))
-            {
-                trackData = list1;
-                Toast.makeText(MainActivity.this,list1.toString() + " " + list1.size(), Toast.LENGTH_SHORT);
-                Log.v("gps", s + " " + list1.size());
-                StringBuffer sb = new StringBuffer();
-                for (LatLng i : list1)
-                {
-                    sb.append(i.toString() + " ");
-                }
-                Log.v("gps", s + " " + sb.toString());
-            }
-            else
-            {
-                SignalBadView();
-                Log.v("gps", s);
-            }
+        public void run() {
+            lbsTraceClient.queryProcessedTrace(1, traceLocations, LBSTraceClient.TYPE_AMAP, traceListener);
+        }
+    };
+    private TraceListener traceListener = new TraceListener() {
+        @Override
+        public void onRequestFailed(int i, String s) {
+            Log.v("gps", "轨迹纠编失败");
+        }
+
+        @Override
+        public void onTraceProcessing(int i, int i1, List<LatLng> list) {
+
+        }
+
+        @Override
+        public void onFinished(int i, List<LatLng> list, int i1, int i2) {
+            trackData = list;
+            distance = i1 / 1000.0;
         }
     };
 
@@ -181,19 +188,10 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
         mlocationClient.startLocation();
 
         lbsTraceClient = LBSTraceClient.getInstance(getApplicationContext());
-        lbsTraceClient.startTrace(traceStatusListener);
-
-
-        //获取猎鹰接口的key
-        try
-        {
-            key = getPackageManager().getApplicationInfo(getPackageName(), PackageManager.GET_META_DATA).metaData.getString("com.amap.api.v2.webapikey");
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-
 
         listView.setAdapter(mAdapter);
+        //启动轨迹纠编
+        timer.schedule(timerTask, 10000, 10000);
     }
 
 
@@ -212,6 +210,11 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
         lbsTraceClient.destroy();
         mlocationClient.stopLocation();
         mlocationClient.onDestroy();
+        //判断是否保存轨迹数据
+        if (save_switch.isChecked())
+        {
+            new SqlUtils(getApplicationContext()).insertTrack(JSON.toJSONString(trackData), start_time, new Date());
+        }
     }
 
     //设置信号差的视图
@@ -244,6 +247,9 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
         history_btn = findViewById(R.id.historybtn);
         history_btn.setVisibility(View.GONE);
         history_btn.setOnClickListener(this);
+        save_switch = findViewById(R.id.saveswitch);
+        save_switch.setOnCheckedChangeListener(this);
+        listView.setOnScrollListener(this);
     }
 
     /**
@@ -272,12 +278,18 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
         return notification;
     }
 
+    /*
+    * 重写返回键，实现确认退出，询问是否保存轨迹数据
+    * @author W.J.H
+    * @email jianhui.wu.chn@hotmail.com
+    * @create at 2018/11/1
+    */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {
         if(keyCode==KeyEvent.KEYCODE_BACK)
         {
-            new AlertDialog.Builder(this).setTitle("提示").setMessage("您确定退出？").setPositiveButton("确定", (i, d)->{
+            new AlertDialog.Builder(this).setTitle("提示").setMessage("您确定退出吗？").setPositiveButton("确定", (i, d)->{
                 MainActivity.this.finish();
             }).setNegativeButton("取消", null).create().show();
         }
@@ -292,17 +304,34 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
             case R.id.addbtn:
                 map_btn.setVisibility(map_btn.getVisibility() == View.GONE? View.VISIBLE : View.GONE);
                 history_btn.setVisibility(history_btn.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+                save_switch.setVisibility(save_switch.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
                 break;
             case R.id.mapbtn:
-                Intent intent = new Intent(this, MapActivity.class);
-                intent.putExtra("trackData", JSON.toJSONString(trackData));
-                startActivity(intent);
+                Intent intentmap = new Intent(this, MapActivity.class);
+                intentmap.putExtra("trackData", JSON.toJSONString(trackData));
+                intentmap.putExtra("start_time", start_time);
+                intentmap.putExtra("end_time", new Date());
+                startActivity(intentmap);
                 break;
             case R.id.historybtn:
+                Intent intenttrack = new Intent(this, TrackListActivity.class);
+                startActivity(intenttrack);
                 break;
         }
     }
 
+    @Override
+    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        switch (buttonView.getId())
+        {
+            case R.id.saveswitch:
+                if (isChecked)
+                    Toast.makeText(this, "保存轨迹 开启", Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(this, "保存轨迹 关闭", Toast.LENGTH_SHORT).show();
+                break;
+        }
+    }
 
     class MyBaseAdapter extends BaseAdapter {
         //得到item的总数
@@ -330,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
             ViewHolder holder;
             if (convertView == null)
             {
-                convertView = LayoutInflater.from(getApplicationContext()).inflate(R.layout.listviewitem,parent,false);
+                convertView = LayoutInflater.from(getApplicationContext()).inflate(R.layout.info_viewitem,parent,false);
                 holder = new ViewHolder();
                 holder.icon = (ImageView)convertView.findViewById(R.id.icon);
                 holder.name = (TextView) convertView.findViewById(R.id.name);
@@ -354,5 +383,21 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
             private TextView name;
             private TextView content;
         }
+    }
+
+    //保持滚动位置，更新数据后重新设置位置
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+        // 不滚动时保存当前滚动到的位置
+        if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
+            if (view != null) {
+                scrolledY = listView.getScrollY();
+            }
+        }
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+
     }
 }

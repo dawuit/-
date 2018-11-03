@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#181818"
+    android:paddingHorizontal="5dp"
+    android:paddingVertical="15dp">
+    <TextView
+        android:id="@+id/trackitem_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1"
+        android:layout_centerVertical="true"
+        android:textColor="#fff"
+        android:textSize="15dp"/>
+
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerVertical="true"
+        android:src="@drawable/track"
+        android:layout_marginLeft="15dp"/>
+
+    <TextView
+        android:id="@+id/trackitem_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0000-00-00 00:00:00"
+        android:layout_marginTop="5dp"
+        android:textColor="#fff"
+        android:textSize="15dp"
+        android:layout_marginLeft="65dp"/>
+
+    <TextView
+        android:id="@+id/trackitem_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="65dp"
+        android:text="持续时间：00:00:00"
+        android:textColor="#fff"
+        android:textSize="12dp" />
+
+    <Button
+        android:id="@+id/tracklist_detail"
+        android:background="@drawable/btn_oval"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="55dp"
+        android:textColor="#ffffff"
+        android:text="查看"
+        />
+
+    <Button
+        android:id="@+id/tracklist_delete"
+        android:background="@drawable/btn_oval"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:textColor="#ffffff"
+        android:text="删除"
+        />
+</RelativeLayout>
